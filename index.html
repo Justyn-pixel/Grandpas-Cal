@@ -3,139 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shared Team Calendar</title>
+    <title>Shared Calendar (API)</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Use the Inter font family */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Style for the calendar iframe to make it responsive */
-        .calendar-container iframe {
-            width: 100%;
-            height: 600px;
-            border-radius: 0.5rem; /* 8px */
-            border: 1px solid #777; /* Matching the iframe's border style */
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .calendar-container iframe { width: 100%; height: 600px; border-radius: 0.5rem; border: 1px solid #777; }
+        input[type="date"], input[type="time"] { color-scheme: dark; }
+        #event-list li { border-left-width: 4px; }
+        #event-list li:nth-child(odd) { border-color: #3b82f6; } /* blue-500 */
+        #event-list li:nth-child(even) { border-color: #8b5cf6; } /* violet-500 */
     </style>
 </head>
 <body class="bg-gray-900 text-white antialiased">
 
     <div class="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         
-        <!-- Header Section -->
         <header class="text-center mb-12">
-            <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl">Our Shared Calendar</h1>
-            <p class="mt-4 text-lg text-gray-300">View upcoming events below or use the form to add a new event to your personal calendar.</p>
+            <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl">Grandpa's Calendar</h1>
+            <p class="mt-4 text-lg text-gray-300">Sign in to add an event directly to the shared calendar.</p>
+            <div class="mt-6 flex justify-center gap-4">
+                <button id="authorize_button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all">Sign In & Authorize</button>
+                <button id="signout_button" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all" style="display: none;">Sign Out</button>
+            </div>
         </header>
 
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
             <!-- Left Column: Add Event Form -->
-            <div class="lg:col-span-1">
+            <div id="form-container" class="lg:col-span-1" style="display: none;">
                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-                    <h2 class="text-2xl font-semibold mb-6">Add Event to Your Calendar</h2>
+                    <h2 class="text-2xl font-semibold mb-6">Add an Event</h2>
                     <form id="addEventForm">
                         <div class="space-y-4">
-                            <!-- Event Title -->
-                            <div>
-                                <label for="eventTitle" class="block text-sm font-medium text-gray-300">Event Title</label>
-                                <input type="text" id="eventTitle" name="eventTitle" required
-                                    class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <input type="text" id="eventTitle" placeholder="Event Title" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500">
+                            <input type="date" id="eventDate" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500">
+                            <div class="flex gap-4">
+                                <input type="time" id="eventStartTime" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500">
+                                <input type="time" id="eventEndTime" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500">
                             </div>
-                            <!-- Event Date -->
-                            <div>
-                                <label for="eventDate" class="block text-sm font-medium text-gray-300">Date</label>
-                                <input type="date" id="eventDate" name="eventDate" required
-                                    class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" style="color-scheme: dark;">
-                            </div>
-                            <!-- Start Time -->
-                            <div>
-                                <label for="eventStartTime" class="block text-sm font-medium text-gray-300">Start Time</label>
-                                <input type="time" id="eventStartTime" name="eventStartTime" required
-                                    class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" style="color-scheme: dark;">
-                            </div>
-                            <!-- End Time -->
-                             <div>
-                                <label for="eventEndTime" class="block text-sm font-medium text-gray-300">End Time</label>
-                                <input type="time" id="eventEndTime" name="eventEndTime" required
-                                    class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" style="color-scheme: dark;">
-                            </div>
-                            <!-- Event Description -->
-                            <div>
-                                <label for="eventDescription" class="block text-sm font-medium text-gray-300">Description</label>
-                                <textarea id="eventDescription" name="eventDescription" rows="4"
-                                    class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
-                            </div>
+                            <textarea id="eventDescription" rows="3" placeholder="Description" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500"></textarea>
                         </div>
-                        <!-- Submit Button -->
                         <div class="mt-6">
-                            <button type="submit"
-                                class="w-full inline-flex justify-center py-3 px-4 border border-transparent shadow-sm text-sm font-semibold rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors">
-                                Generate 'Add to Calendar' Link
-                            </button>
+                            <button type="submit" class="w-full justify-center py-3 px-4 border-transparent shadow-sm font-semibold rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">Add Event to Calendar</button>
                         </div>
                     </form>
+                </div>
+                <div class="mt-8">
+                     <h3 class="text-xl font-semibold mb-4">Upcoming Events</h3>
+                     <ul id="event-list" class="space-y-3">
+                        <!-- Events will be listed here by the script -->
+                     </ul>
                 </div>
             </div>
 
             <!-- Right Column: Embedded Calendar -->
             <div class="lg:col-span-2 calendar-container">
-                <!-- User's Google Calendar Iframe -->
-                <iframe src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=America%2FDenver&showPrint=0&title=Grandpa's%20Calendar%20&src=ODhlNDljZTNiMTFhZmU5MmM5MGZlMjMzNzVjMzExMjU0M2I0Mzc5YzA0OGFmMmU3MTIxZGFlYzQ0ODEwN2FiYUBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&src=ZTBmNDIwNDhkMjVmOGUxMGYyNWY2NzBlN2RiNTczMzJmMWE5Y2Q0N2M0NTQyZGFkMzNhMWY3MzNjZGYzNTRmNUBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&src=dDg4N29ibDQ0dWRuN25sazZzMmY1dDgyMHZjbWFkcGZAaW1wb3J0LmNhbGVuZGFyLmdvb2dsZS5jb20&color=%23616161&color=%23a79b8e&color=%23ad1457" style="border:solid 1px #777" width="800" height="600" frameborder="0" scrolling="no"></iframe>
+                <iframe src="https://calendar.google.com/calendar/embed?src=88e49ce3b11afe92c90fe23375c3112543b4379c048af2e7121daec448107aba%40group.calendar.google.com&ctz=America%2FDenver" frameborder="0" scrolling="no"></iframe>
             </div>
-        </main>
 
+        </main>
+    </div>
+    
+    <!-- Modal for messages -->
+    <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center" style="display: none;">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm mx-auto mt-20 text-center">
+            <p id="modal-text" class="text-lg mb-4"></p>
+            <button onclick="document.getElementById('message-modal').style.display='none'" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">OK</button>
+        </div>
     </div>
 
+
+    <script src="https://apis.google.com/js/api.js"></script>
     <script>
-        // Get the form element
-        const eventForm = document.getElementById('addEventForm');
+        // =========================================================================
+        // == IMPORTANT: PASTE YOUR GOOGLE API CREDENTIALS HERE                   ==
+        // =========================================================================
+        const API_KEY = AIzaSyAVQqUes7Drl92aYl6_ixmd_nye3dDGGaU; 
+        const CLIENT_ID = 795844720781-3chqk2gp55sg464np5p8qumrf6mpp0tm.apps.googleusercontent.com;
+        const CALENDAR_ID = '88e49ce3b11afe92c90fe23375c3112543b4379c048af2e7121daec448107aba@group.calendar.google.com';
+        // =========================================================================
 
-        // Add a submit event listener to the form
-        eventForm.addEventListener('submit', function (event) {
-            // Prevent the default form submission behavior
-            event.preventDefault();
+        const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+        const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 
-            // Get values from the form fields
+        let tokenClient;
+        let gapiInited = false;
+        let gisInited = false;
+
+        const authorizeButton = document.getElementById('authorize_button');
+        const signoutButton = document.getElementById('signout_button');
+        const addEventForm = document.getElementById('addEventForm');
+        const formContainer = document.getElementById('form-container');
+        const eventList = document.getElementById('event-list');
+
+        // On page load, load the GAPI client
+        window.onload = () => {
+            gapi.load('client', initializeGapiClient);
+            
+            // Also load the GIS client
+            const script = document.createElement('script');
+            script.src = 'https://accounts.google.com/gsi/client';
+            script.async = true;
+            script.defer = true;
+            script.onload = initializeGisClient;
+            document.body.appendChild(script);
+        };
+
+        // Initialize the GAPI client
+        async function initializeGapiClient() {
+            await gapi.client.init({
+                apiKey: API_KEY,
+                discoveryDocs: [DISCOVERY_DOC],
+            });
+            gapiInited = true;
+            maybeEnableButtons();
+        }
+
+        // Initialize the GIS client
+        function initializeGisClient() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '', // defined later
+            });
+            gisInited = true;
+            maybeEnableButtons();
+        }
+
+        // Enable buttons if both clients are initialized
+        function maybeEnableButtons() {
+            if (gapiInited && gisInited) {
+                authorizeButton.disabled = false;
+            }
+        }
+
+        authorizeButton.onclick = () => handleAuthClick();
+        signoutButton.onclick = () => handleSignoutClick();
+
+        function handleAuthClick() {
+            tokenClient.callback = async (resp) => {
+                if (resp.error !== undefined) {
+                    throw (resp);
+                }
+                updateUi(true);
+                await listUpcomingEvents();
+            };
+
+            // Conditionally ask for consent
+            if (gapi.client.getToken() === null) {
+                tokenClient.requestAccessToken({ prompt: 'consent' });
+            } else {
+                tokenClient.requestAccessToken({ prompt: '' });
+            }
+        }
+
+        function handleSignoutClick() {
+            const token = gapi.client.getToken();
+            if (token !== null) {
+                google.accounts.oauth2.revoke(token.access_token);
+                gapi.client.setToken('');
+                updateUi(false);
+                eventList.innerHTML = ''; // Clear the event list
+            }
+        }
+
+        function updateUi(isAuthorized) {
+            formContainer.style.display = isAuthorized ? 'block' : 'none';
+            authorizeButton.style.display = isAuthorized ? 'none' : 'block';
+            signoutButton.style.display = isAuthorized ? 'block' : 'none';
+        }
+
+        // Fetch and display the next 10 events
+        async function listUpcomingEvents() {
+            let response;
+            try {
+                const request = {
+                    'calendarId': CALENDAR_ID,
+                    'timeMin': (new Date()).toISOString(),
+                    'showDeleted': false,
+                    'singleEvents': true,
+                    'maxResults': 10,
+                    'orderBy': 'startTime',
+                };
+                response = await gapi.client.calendar.events.list(request);
+            } catch (err) {
+                console.error('Error fetching events:', err);
+                showMessage(`Error: ${err.result.error.message}`);
+                return;
+            }
+
+            const events = response.result.items;
+            if (!events || events.length == 0) {
+                eventList.innerHTML = '<li>No upcoming events found.</li>';
+                return;
+            }
+
+            // Clear previous list
+            eventList.innerHTML = '';
+            
+            // Format and display each event
+            events.forEach(event => {
+                const start = event.start.dateTime || event.start.date;
+                const eventDate = new Date(start);
+                const dateString = eventDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                const timeString = eventDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
+
+                const li = document.createElement('li');
+                li.className = "bg-gray-800 p-3 rounded-lg";
+                li.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold">${event.summary}</span>
+                        <span class="text-sm text-gray-400">${dateString} at ${timeString.replace(' ', '')}</span>
+                    </div>
+                `;
+                eventList.appendChild(li);
+            });
+        }
+        
+        // Handle the form submission to add an event
+        addEventForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
             const title = document.getElementById('eventTitle').value;
             const date = document.getElementById('eventDate').value;
             const startTime = document.getElementById('eventStartTime').value;
             const endTime = document.getElementById('eventEndTime').value;
             const description = document.getElementById('eventDescription').value;
 
-            // --- Construct the Google Calendar URL ---
-            
-            // Google Calendar requires dates in 'YYYYMMDDTHHMMSS' format, in UTC.
-            // We'll combine the date and time inputs and format them.
             const startDateTime = new Date(`${date}T${startTime}`);
             const endDateTime = new Date(`${date}T${endTime}`);
 
-            // The toISOString() method returns a string in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ), 
-            // which we can clean up for the Google Calendar URL.
-            const formatAsGoogleDate = (dateObj) => dateObj.toISOString().replace(/-|:|\.\d{3}/g, '');
+            const event = {
+                'summary': title,
+                'description': description,
+                'start': { 'dateTime': startDateTime.toISOString(), 'timeZone': 'America/Denver' },
+                'end': { 'dateTime': endDateTime.toISOString(), 'timeZone': 'America/Denver' },
+            };
 
-            const googleStartDate = formatAsGoogleDate(startDateTime);
-            const googleEndDate = formatAsGoogleDate(endDateTime);
-
-            // Create the base URL
-            const googleCalendarUrl = new URL('https://www.google.com/calendar/render');
-            googleCalendarUrl.searchParams.append('action', 'TEMPLATE');
-            googleCalendarUrl.searchParams.append('text', title);
-            googleCalendarUrl.searchParams.append('dates', `${googleStartDate}/${googleEndDate}`);
-            googleCalendarUrl.searchParams.append('details', description);
-            // You could also add a location:
-            // googleCalendarUrl.searchParams.append('location', 'Your Location Here');
-
-            // Open the generated URL in a new tab
-            window.open(googleCalendarUrl.toString(), '_blank');
+            try {
+                const request = gapi.client.calendar.events.insert({
+                    'calendarId': CALENDAR_ID,
+                    'resource': event,
+                });
+                await request;
+                showMessage(`Event "${title}" created successfully!`);
+                addEventForm.reset();
+                await listUpcomingEvents(); // Refresh the list
+            } catch (err) {
+                console.error('Error creating event:', err);
+                showMessage(`Error creating event. See console for details.`);
+            }
         });
-    </script>
+        
+        function showMessage(message) {
+             const modal = document.getElementById('message-modal');
+             const modalText = document.getElementById('modal-text');
+             modalText.textContent = message;
+             modal.style.display = 'flex';
+        }
 
+    </script>
 </body>
 </html>
