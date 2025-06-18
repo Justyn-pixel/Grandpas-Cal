@@ -45,8 +45,8 @@
             </div>
         </header>
 
-        <!-- UPDATED: Responsive gap for mobile -->
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+        <!-- UPDATED: Grid layout is now controlled by JavaScript -->
+        <main class="grid grid-cols-1 gap-8 lg:gap-12">
 
             <!-- Left Column: Add Event Form -->
             <div id="form-container" class="lg:col-span-1" style="display: none;">
@@ -57,9 +57,9 @@
                             <input type="text" id="eventTitle" placeholder="Event Title" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500">
                             <input type="date" id="eventDate" required class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500">
                             <div class="flex gap-4">
-                                <!-- UPDATED: Added step="600" for 10-minute increments -->
-                                <input type="time" id="eventStartTime" required step="600" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500">
-                                <input type="time" id="eventEndTime" required step="600" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500">
+                                <!-- UPDATED: Changed step to 900 for 15-minute increments -->
+                                <input type="time" id="eventStartTime" required step="900" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500">
+                                <input type="time" id="eventEndTime" required step="900" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500">
                             </div>
                             <textarea id="eventDescription" rows="3" placeholder="Description" class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md py-2 px-3 text-white focus:ring-blue-500"></textarea>
                         </div>
@@ -115,6 +115,7 @@
         const addEventForm = document.getElementById('addEventForm');
         const formContainer = document.getElementById('form-container');
         const eventList = document.getElementById('event-list');
+        const mainElement = document.querySelector('main');
 
         // On page load, load GAPI and GIS clients.
         window.onload = () => {
@@ -149,35 +150,25 @@
             attemptAutomaticSignIn();
         }
 
-        // UPDATED: This function is called when a token is received, either automatically or from a button click.
         function handleTokenResponse(resp) {
             if (resp.error !== undefined) {
-                // If the automatic sign-in fails, the user will need to click the button.
-                // We don't need to show an error here.
                 console.warn('Token error:', resp.error);
                 return;
             }
-            // If we get a token, update the UI.
             updateUi(true);
             listUpcomingEvents();
         }
 
-        // UPDATED: Tries to sign in automatically once both libraries are loaded.
         function attemptAutomaticSignIn() {
             if (gapiInited && gisInited) {
-                // Try to get a token without user interaction.
-                // This will only work if the user has previously signed in and granted consent.
                 tokenClient.requestAccessToken({ prompt: 'none' });
             }
         }
         
-        // This function is now ONLY for when the user explicitly clicks the Sign In button.
         function handleAuthClick() {
              if (gapi.client.getToken() === null) {
-                // Prompt the user to select an account and grant consent if they haven't yet.
                 tokenClient.requestAccessToken({ prompt: 'consent' });
             } else {
-                // If they have a token but it's expired, this will refresh it without a consent screen.
                 tokenClient.requestAccessToken({ prompt: '' });
             }
         }
@@ -199,6 +190,13 @@
             formContainer.style.display = isAuthorized ? 'block' : 'none';
             authorizeButton.style.display = isAuthorized ? 'none' : 'block';
             signoutButton.style.display = isAuthorized ? 'block' : 'none';
+
+            // UPDATED: Toggle grid layout for centering
+            if (isAuthorized) {
+                mainElement.classList.add('lg:grid-cols-3');
+            } else {
+                mainElement.classList.remove('lg:grid-cols-3');
+            }
         }
 
         async function listUpcomingEvents() {
